@@ -1,13 +1,29 @@
 services:
   postgres:
     image: postgres:16
-    container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: 123
-      POSTGRES_DB: tech_challange_2
+      POSTGRES_USER: johnny
+      POSTGRES_PASSWORD: senha123
+      POSTGRES_DB: fiapdb
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
-      - ./data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: postgres
+      DB_USER: johnny
+      DB_PASSWORD: senha123
+      DB_NAME: fiapdb
+    volumes:
+      - .:/app
+
+volumes:
+  pgdata:
