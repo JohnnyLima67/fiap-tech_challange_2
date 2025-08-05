@@ -5,6 +5,9 @@ export async function validateJwt(request: FastifyRequest, reply: FastifyReply) 
     const routeFreelist = [
       'POST-/users',
       'POST-/users/signin',
+      'POST-/roles',
+      'PUT-/roles/:id',
+      'DELETE-/roles/:id',
       'GET-/posts',
       'GET-/posts/:id',
       'GET-/posts/search',

@@ -1,29 +1,29 @@
 services:
   postgres:
     image: postgres:16
+    container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: johnny
-      POSTGRES_PASSWORD: senha123
-      POSTGRES_DB: fiapdb
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
     ports:
-      - "5432:5432"
+      - '${DATABASE_PORT}:${DATABASE_PORT}'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+
 
   app:
     build: .
+    container_name: blogging_app
+    restart: always
+    ports:
+      - '${PORT}:${PORT}'
     depends_on:
       - postgres
-    ports:
-      - "3000:3000"
-    environment:
-      DB_HOST: postgres
-      DB_USER: johnny
-      DB_PASSWORD: senha123
-      DB_NAME: fiapdb
-    volumes:
-      - .:/app
+    env_file:
+      - .env
 
 volumes:
-  pgdata:
+  postgres_data:
