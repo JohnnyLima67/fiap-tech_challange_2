@@ -1,0 +1,57 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build image Docker
+        run: |
+          IMAGE_NAME=myuser/fiap-tech-challenge-2
+          TAG=${{ github.sha }}
+          docker build -t $IMAGE_NAME:$TAG .
+          docker tag $IMAGE_NAME:$TAG $IMAGE_NAME:latest
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push das imagens
+        run: |
+          IMAGE_NAME=myuser/fiap-tech-challenge-2
+          TAG=${{ github.sha }}
+          docker push $IMAGE_NAME:$TAG
+          docker push $IMAGE_NAME:latest
+
+  deploy-via-ssh:
+    needs: build-and-publish
+    if: always()     # só rodar se você quiser deploy automático
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SERVER_SSH }}
+
+      - name: Deploy no servidor
+        run: |
+          ssh -o StrictHostKeyChecking=no user@${{ secrets.DEPLOY_SERVER_HOST }} << 'EOF'
+            docker pull myuser/fiap-tech-challenge-2:latest
+            docker stop fiap-app || true
+            docker rm fiap-app  || true
+            docker run -d --name fiap-app -p 3000:3000 myuser/fiap-tech-challenge-2:latest
+          EOF
